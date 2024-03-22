@@ -1429,11 +1429,11 @@ key() {
         "${FFF_KEY_CHILD3:=""}"     |\
         "${FFF_KEY_CHILD4:=$'\eOC'}")
             # If history then return to the previous state.
-            ((history)) && {
+            if [ "$helping" ]; then
                 details=$saved_details
                 FFF_FILE_ICON="$icon_value"
                 list[scroll]=${list[scroll]#* }
-            }
+            fi
 
             open "${list[scroll]}"
         ;;
@@ -1449,7 +1449,7 @@ key() {
         "${FFF_KEY_PARENT4:=$'\b'}"  |\
         "${FFF_KEY_PARENT5:=$'\eOD'}")
             # If history/help then return to the previous state.
-            if ((history)) || ((helping)); then
+            if [ "$helping" -eq 1 ] || [ "$history" -eq 1 ]; then
                 details=$saved_details
                 FFF_FILE_ICON="$icon_value"
                 open "$PWD"
@@ -1529,7 +1529,7 @@ key() {
 
         # Show hidden files.
         "${FFF_KEY_HIDDEN:=.}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             # 'a=a>0?0:++a': Toggle between both values of 'shopt_flags'.
             #                This also works for '3' or more values with
@@ -1573,7 +1573,7 @@ key() {
         "${FFF_KEY_TRASH:=d}"     |\
         "${FFF_KEY_LINK:=s}"      |\
         "${FFF_KEY_BULK_RENAME:=b}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             [[ -z "${marked_files[*]}" ]] && return
 
@@ -1599,21 +1599,21 @@ key() {
 
         # Mark files for operation.
         "${FFF_KEY_MARK:=" "}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             mark "$scroll" "$1"
         ;;
 
         # Mark all files for operation.
         "${FFF_KEY_MARK_ALL:=a}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             mark all "$1"
         ;;
 
         # Do the file operation.
         "${FFF_KEY_EXECUTE:=p}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             [[ ${marked_files[*]} ]] && {
                 [[ ! -w $PWD ]] && {
@@ -1649,7 +1649,7 @@ key() {
 
         # Rename list item.
         "${FFF_KEY_RENAME:=r}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             [[ ! -e ${list[scroll]} ]] && return
 
@@ -1670,7 +1670,7 @@ key() {
 
         # Create a directory.
         "${FFF_KEY_MKDIR:=n}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             cmd_line "Create directory: " "dirs"
 
@@ -1689,7 +1689,7 @@ key() {
 
         # Create a file.
         "${FFF_KEY_MKFILE:=f}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             cmd_line "Create file: " "file"
 
@@ -1709,7 +1709,7 @@ key() {
 
         # Show file attributes.
         "${FFF_KEY_ATTRIBUTES:=x}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             [[ -e "${list[scroll]}" ]] && {
                 clear_screen
@@ -1732,7 +1732,7 @@ key() {
 
         # Toggle executable flag.
         "${FFF_KEY_EXECUTABLE:=X}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             [[ -f ${list[scroll]} && -w ${list[scroll]} ]] && {
                 if [[ -x ${list[scroll]} ]]; then
@@ -1747,7 +1747,7 @@ key() {
 
         # Go to dir.
         "${FFF_KEY_GO_DIR:=:}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             cmd_line "go to dir: " "dirs"
 
@@ -1761,7 +1761,7 @@ key() {
 
         # Open file with.
         "${FFF_KEY_OPEN_WITH:=o}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             cmd_line "open with: " "cmd"
             [[ $cmd_reply ]] && {
@@ -1782,7 +1782,7 @@ key() {
 
         # Open file with to run background.
         "${FFF_KEY_OPEN_WITH_DETACHED:=O}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             cmd_line "open with (detached): " "cmd"
             [[ $cmd_reply ]] && {
@@ -1816,7 +1816,7 @@ key() {
 
         # Sort by name (0) time (1).
         "${FFF_KEY_SORT:=u}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             [ "$sort" == 0 ] && sort=1 || sort=0
 
@@ -1825,7 +1825,7 @@ key() {
 
         # Show file details (on/off).
         "${FFF_KEY_DETAILS:=i}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             [ "$details" == 0 ] && details=1 || details=0
 
@@ -1839,12 +1839,6 @@ key() {
 
         # Refresh current dir.
         "${FFF_KEY_REFRESH:=z}")
-            ((helping)) || ((history)) && {
-                list=("${cur_list[@]}")
-                redraw full
-                return
-            }
-
             open "$PWD"
         ;;
 
@@ -1868,20 +1862,20 @@ key() {
             favourite="FFF_FAV${1}"
             favourite="${!favourite}"
 
-            [[ $favourite ]] && open "$favourite"
+            [ "$favourite" -eq 1 ] && open "$favourite"
         ;;
 
         # Display help.
         "${FFF_KEY_HELP:=?}")
-            ((history)) && return
+            [ "$history" -eq 1 ] && return
 
-            ((helping)) && {
+            if [ "$history" -ne 0 ]; then
                 # Return to the previous state.
                 details=$saved_details
                 FFF_FILE_ICON="$icon_value"
                 redraw full
                 return
-            }
+            fi
 
             saved_details=$details
             details=0
@@ -1890,15 +1884,15 @@ key() {
 
         # Display history.
         "${FFF_KEY_HISTORY:=e}")
-            ((helping)) && return
+            [ "$helping" -eq 1 ] && return
 
-            ((history)) && {
+            if [ "$history" -ne 0 ]; then
                 # Return to the previous state.
                 details=$saved_details
                 FFF_FILE_ICON="$icon_value"
                 redraw full
                 return
-            }
+            fi
 
             saved_details=$details
             details=0
@@ -1907,7 +1901,7 @@ key() {
 
         # Display image using img2sixel.
         "${FFF_KEY_SIXEL:=I}")
-            ((helping)) || ((history)) && return
+            [ "$helping" -eq 1 ] || [ "$history" -eq 1 ] && return
 
             if ! command -v img2sixel > /dev/null; then
                 redraw full
@@ -1928,12 +1922,12 @@ key() {
         # Don't allow user to redefine 'q' so a bad keybinding doesn't
         # remove the option to quit.
         "q")
-            ((helping)) || ((history)) && {
+            if [ "$helping" -eq 1 ] || [ "$history" -eq 1 ]; then
                 details=$saved_details
                 FFF_FILE_ICON="$icon_value"     # Set FFF_FILE_ICON to previous state.
                 redraw full
                 return
-            }
+            fi
 
             # Delete everything in history after FFF_HISTORY_LENGTH line.
             lines_num=${FFF_HISTORY_LENGTH:-100}
@@ -1941,7 +1935,7 @@ key() {
 
             : "${FFF_CD_FILE:=${XDG_CACHE_HOME:=${HOME}/.cache}/fff/.fff_d}"
 
-            [[ -w $FFF_CD_FILE ]] && rm "$FFF_CD_FILE"
+            [ -w "$FFF_CD_FILE" ] && rm "$FFF_CD_FILE"
 
             [[ ${FFF_CD_ON_EXIT:=1} == 1 ]] &&
                 printf '%s\n' "$PWD" > "$FFF_CD_FILE"
@@ -1960,20 +1954,19 @@ main() {
     # '||:': Do nothing if 'cd' fails. We don't care.
     cd "${2:-$1}" &>/dev/null ||:
 
-    [[ $1 == -v ]] && {
+    if [ "$1" = "-v" ]; then
         printf '%s\n' "fff 2.2"
         exit
-    }
+    fi
 
-    [[ $1 == -h ]] && {
+    if [ "$1" = "-h" ]; then
         man fff
         exit
-    }
+    fi
 
     # Store file name in a file on open instead of using 'FFF_OPENER'.
     # Used in 'fff.vim'.
-    [[ $1 == -p ]] &&
-        file_picker=1
+    [ "$1" = "-p" ] && file_picker=1
 
     # bash 5 and some versions of bash 4 don't allow SIGWINCH to interrupt
     # a 'read' command and instead wait for it to complete. In this case it
@@ -2013,12 +2006,12 @@ main() {
     redraw full
 
     # Vintage infinite loop.
-    for ((;;)); {
+    while true; do
         read "${read_flags[@]}" -srn 1 && key "$REPLY"
 
         # Exit if there is no longer a terminal attached.
-        [[ -t 1 ]] || exit 1
-    }
+        [ -t 1 ] || exit 1
+    done
 }
 
 main "$@"

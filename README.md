@@ -1,5 +1,7 @@
 # fff (*Fucking Fine File-Manager*)
 
+# POSIX branch where I try to make this program POSIX compliant! EXPECT BREAKING CHANGES!
+
 ### This fork is meant to make fff a more feature-rich file manager, but at cost of raw speed.
 
 <a href="https://asciinema.org/a/qvNlrFrGB3xKZXb6GkremjZNp" target="_blank"><img src="https://asciinema.org/a/qvNlrFrGB3xKZXb6GkremjZNp.svg" alt="img" height="210px" align="right"/></a>
